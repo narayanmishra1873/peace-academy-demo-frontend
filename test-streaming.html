@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peace Academy Agent - Streaming Test</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            text-align: center;
+            color: #4a5568;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        .input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .message-box { 
+            border: 1px solid #e2e8f0; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .user-message { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: 50px;
+        }
+        .agent-message { 
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            margin-right: 50px;
+        }
+        .current-response {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            50% { box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+            100% { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        }
+        .metadata { 
+            background-color: #f7fafc; 
+            font-size: 0.85em; 
+            color: #4a5568;
+            border-left: 4px solid #4299e1;
+        }
+        .error { 
+            background: linear-gradient(135deg, #fc466b 0%, #3f5efb 100%);
+            color: white;
+        }
+        #messageInput { 
+            flex: 1;
+            padding: 12px 15px; 
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+        #messageInput:focus {
+            border-color: #667eea;
+        }
+        .btn {
+            padding: 12px 24px; 
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        #sendBtn { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        #sendBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        #sendRegularBtn { 
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        #sendRegularBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        #clearBtn {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #4a5568;
+        }
+        #status { 
+            margin: 15px 0; 
+            font-weight: 600;
+            padding: 10px 15px;
+            border-radius: 20px;
+            background-color: #edf2f7;
+            color: #4a5568;
+            text-align: center;
+        }
+        .timestamp { 
+            color: rgba(255,255,255,0.8); 
+            font-size: 0.75em; 
+            margin-bottom: 5px;
+        }
+        .metadata .timestamp {
+            color: #718096;
+        }
+        .response-content { 
+            white-space: pre-wrap; 
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        .typing-cursor {
+            animation: blink 1s linear infinite;
+            color: #f093fb;
+            font-weight: bold;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        .sample-questions {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f7fafc;
+            border-radius: 10px;
+            border-left: 4px solid #4299e1;
+        }
+        .sample-questions h3 {
+            margin: 0 0 10px 0;
+            color: #4a5568;
+        }
+        .sample-btn {
+            background: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            padding: 8px 12px;
+            margin: 5px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .sample-btn:hover {
+            background: #cbd5e0;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🕊️ Peace Academy AI Agent - Streaming Test</h1>
+          <div class="sample-questions">
+            <h3>💡 Try These Sample Questions:</h3>
+            <button class="sample-btn" onclick="setSampleMessage('What is the 7+2 Formula?')">7+2 Formula</button>
+            <button class="sample-btn" onclick="setSampleMessage('Tell me about word-switches')">Word-switches</button>
+            <button class="sample-btn" onclick="setSampleMessage('What is the genie organ?')">Genie Organ</button>
+            <button class="sample-btn" onclick="setSampleMessage('How can I join the Genie Seminar?')">Genie Seminar</button>
+            <button class="sample-btn" onclick="setSampleMessage('What does HELP stand for?')">HELP Concepts</button>
+            <button class="sample-btn" onclick="setSampleMessage('Who is Don Pet?')">About Don Pet</button>
+            <button class="sample-btn" onclick="setSampleMessage('I want to assess my happiness level')">Happiness Test</button>
+            <button class="sample-btn" onclick="setSampleMessage('I am really frustrated with this')">Test Angry Agent</button>
+            <button class="sample-btn" onclick="setSampleMessage('Thank you, that is all I needed')">Test Feedback Agent</button>
+        </div>
+        
+        <div class="input-section">
+            <input type="text" id="messageInput" placeholder="Ask me about Peace Academy teachings..." value="What is the 7+2 Formula?">
+            <button id="sendBtn" class="btn" onclick="sendStreamingMessage()">🚀 Stream</button>
+            <button id="sendRegularBtn" class="btn" onclick="sendRegularMessage()">📝 Regular</button>
+            <button id="clearBtn" class="btn" onclick="clearMessages()">🗑️ Clear</button>
+        </div>
+        
+        <div id="status">Ready to connect</div>
+        
+        <div class="stats">
+            <span>User ID: <strong id="userIdDisplay"></strong></span>
+            <span>Session: <strong id="sessionIdDisplay"></strong></span>
+            <span>Messages: <strong id="messageCount">0</strong></span>
+        </div>
+        
+        <div id="messages"></div>
+    </div>
+
+    <script>        const messagesContainer = document.getElementById('messages');
+        const statusDiv = document.getElementById('status');
+        const messageInput = document.getElementById('messageInput');
+        const messageCountDisplay = document.getElementById('messageCount');
+        
+        let currentResponse = '';
+        let responseStartTime = null;
+        let messageCount = 0;
+        let currentEventSource = null;        // Configuration - Auto-detect API URL
+        const config = {
+            baseUrl: 'https://agent.peace.academy',
+            userId: 'test-user-' + Date.now(),
+            sessionId: 'test-session-' + Date.now(),
+            domain: 'https://peace.academy/happy/',
+            conversationId: null
+        };
+
+        // Initialize display
+        document.getElementById('userIdDisplay').textContent = config.userId.substring(10);
+        document.getElementById('sessionIdDisplay').textContent = config.sessionId.substring(13);
+
+        function setSampleMessage(message) {
+            messageInput.value = message;
+            messageInput.focus();
+        }
+
+        function clearMessages() {
+            messagesContainer.innerHTML = '';
+            messageCount = 0;
+            updateMessageCount();
+            updateStatus('Messages cleared - Ready to chat');
+        }
+
+        function updateMessageCount() {
+            messageCountDisplay.textContent = messageCount;
+        }
+
+        function addMessage(content, type, timestamp = new Date()) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message-box ${type}`;
+            
+            const timeStr = timestamp.toLocaleTimeString();
+            messageDiv.innerHTML = `
+                <div class="timestamp">${timeStr}</div>
+                <div class="response-content">${content}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            if (type === 'user-message' || type === 'agent-message') {
+                messageCount++;
+                updateMessageCount();
+            }
+        }
+
+        function updateStatus(status) {
+            statusDiv.textContent = status;
+            console.log('Status:', status);
+        }        // Enhanced streaming message function
+        async function sendStreamingMessage() {
+            const message = messageInput.value.trim();
+            if (!message) {
+                updateStatus('Please enter a message');
+                return;
+            }
+
+            // Close any existing connection
+            if (currentEventSource) {
+                currentEventSource.close();
+                currentEventSource = null;
+            }
+
+            currentResponse = '';
+            responseStartTime = Date.now();
+            
+            // Add user message to UI
+            addMessage(message, 'user-message');
+            messageInput.value = '';
+            
+            updateStatus('🔄 Initializing stream...');
+
+            try {
+                // Step 1: Initialize stream (now includes full processing)
+                const initResponse = await fetch(`${config.baseUrl}/api/endpoint/stream/init`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors',
+                    body: JSON.stringify({
+                        userId: config.userId,
+                        sessionId: config.sessionId,
+                        message: message,
+                        domain: config.domain,
+                        conversation_id: config.conversationId
+                    })
+                });
+
+                if (!initResponse.ok) {
+                    throw new Error(`HTTP ${initResponse.status}: ${initResponse.statusText}`);
+                }
+
+                const initData = await initResponse.json();
+                
+                if (!initData.success) {
+                    throw new Error(initData.error || 'Failed to initialize stream');
+                }                // Display immediate response from /stream/init (NO AI response here)
+                updateStatus('✅ Stream initialized - connecting to get AI response');
+                console.log('Stream initialized with data:', initData);
+
+                // Show immediate metadata (no AI response yet)
+                if (initData.metadata) {
+                    const metaInfo = `🎯 Status: ${initData.metadata.status} | ${initData.metadata.note || 'Stream ready'}`;
+                    addMessage(metaInfo, 'metadata');
+                }
+
+                // Capture conversation_id and session info
+                if (initData.conversation_id) {
+                    config.conversationId = initData.conversation_id;
+                    addMessage(`💾 Conversation ID: ${initData.conversation_id}`, 'metadata');
+                }
+
+                if (initData.sessionId) {
+                    config.sessionId = initData.sessionId;
+                    document.getElementById('sessionIdDisplay').textContent = initData.sessionId.substring(13);
+                    addMessage(`🔑 Session ID: ${initData.sessionId}`, 'metadata');
+                }
+
+                // Show Chatwoot integration status (conversation creation only)
+                if (initData.chatwoot) {
+                    const chatwootStatus = initData.chatwoot.success ? '✅' : '❌';
+                    addMessage(`${chatwootStatus} Chatwoot: ${initData.chatwoot.action} (conversation ready)`, 'metadata');
+                }
+
+                // Values will be empty at this stage since no AI processing yet
+                if (initData.values && initData.values.length > 0) {
+                    addMessage(`📋 Initial Values: ${JSON.stringify(initData.values)}`, 'metadata');
+                }// Step 2: Connect to streaming endpoint for AI processing
+                updateStatus('🔗 Connecting to stream for AI processing...');
+                const streamUrl = `${config.baseUrl}${initData.streamUrl}`;
+                currentEventSource = new EventSource(streamUrl);
+
+                currentEventSource.onopen = () => {
+                    updateStatus('✅ Connected, processing AI request...');
+                };
+
+                currentEventSource.onmessage = (event) => {
+                    try {
+                        if (event.data === '[DONE]') {
+                            updateStatus('🎉 Streaming complete');
+                            finishCurrentResponse();
+                            if (currentEventSource) {
+                                currentEventSource.close();
+                                currentEventSource = null;
+                            }
+                            return;
+                        }
+
+                        const data = JSON.parse(event.data);
+                        handleStreamMessage(data);
+                    } catch (error) {
+                        console.error('Error parsing stream message:', error);
+                        addMessage(`Parse Error: ${error.message}`, 'error');
+                    }
+                };
+
+                currentEventSource.onerror = (error) => {
+                    console.error('Stream error:', error);
+                    updateStatus('❌ Stream error occurred');
+                    
+                    if (currentEventSource) {
+                        currentEventSource.close();
+                        currentEventSource = null;
+                    }
+                };
+
+            } catch (error) {
+                console.error('Streaming error:', error);
+                addMessage(`❌ Error: ${error.message}`, 'error');
+                updateStatus('❌ Error occurred');
+            }
+        }        function handleStreamMessage(data) {
+            console.log('Stream message:', data);
+
+            switch (data.type) {
+                case 'connected':
+                    updateStatus('🔄 Stream connected, processing...');
+                    addMessage(`✅ Connected to stream: ${data.streamId}`, 'metadata');
+                    break;
+
+                case 'metadata':
+                    updateStatus('🤖 Agent selected, generating response...');
+                    const metaInfo = `🎯 Agent: ${data.data.agentType} | 📊 Confidence: ${(data.data.confidence * 100).toFixed(1)}% | 🧠 Reasoning: ${data.data.reasoning}`;
+                    addMessage(metaInfo, 'metadata');
+                    break;                case 'content':
+                    // Handle real-time streaming content
+                    if (data.data.content) {
+                        currentResponse += data.data.content;
+                        updateResponseDisplay();
+                        updateStatus('📝 Streaming response...');
+                    }
+                    break;
+
+                case 'complete':
+                    updateStatus('✅ Response complete');
+                    const totalTime = Date.now() - responseStartTime;
+                    addMessage(`⏱️ Complete response received in ${totalTime}ms (${currentResponse.length} characters)`, 'metadata');
+                    console.log('Complete response:', data.data);
+                    
+                    // Remove typing cursor from completed response
+                    finishCurrentResponse();
+                    
+                    // Show additional metadata from complete response
+                    if (data.data && data.data.metadata) {
+                        const metadata = data.data.metadata;
+                        addMessage(`📋 Final Metadata: Agent=${metadata.agentType}, Model=${metadata.model_used || 'default'}, Streaming=${metadata.streaming || false}`, 'metadata');
+                        
+                        // Show values if present
+                        if (data.data.values && Object.keys(data.data.values).length > 0) {
+                            addMessage(`📋 Response Values: ${JSON.stringify(data.data.values)}`, 'metadata');
+                        }
+                    }
+                    
+                    if (currentEventSource) {
+                        currentEventSource.close();
+                        currentEventSource = null;
+                    }
+                    break;                case 'final':
+                    updateStatus('🎉 Processing complete');
+                    if (data.data.metadata) {
+                        addMessage(`📋 Final Metadata: Agent=${data.data.metadata.agentType}, Model=${data.data.metadata.model_used || 'default'}`, 'metadata');
+                        
+                        // Show values from final response
+                        if (data.data.values && Object.keys(data.data.values).length > 0) {
+                            addMessage(`📋 Response Values: ${JSON.stringify(data.data.values)}`, 'metadata');
+                        }
+                    }
+                    
+                    // Show Chatwoot message integration status from streaming
+                    if (data.data.chatwoot) {
+                        const chatwoot = data.data.chatwoot;
+                        let chatwootMsg = '💬 Chatwoot Messages: ';
+                        if (chatwoot.userMessageAdded) chatwootMsg += '✅ User ';
+                        if (chatwoot.agentMessageAdded) chatwootMsg += '✅ Agent ';
+                        if (chatwoot.userMessageError) chatwootMsg += '❌ User Error ';
+                        if (chatwoot.agentMessageError) chatwootMsg += '❌ Agent Error ';
+                        addMessage(chatwootMsg, 'metadata');
+                    }
+                    
+                    // Capture conversation_id for subsequent messages
+                    if (data.data.conversation_id) {
+                        config.conversationId = data.data.conversation_id;
+                        addMessage(`💾 Conversation ID: ${data.data.conversation_id}`, 'metadata');
+                    }
+                    break;
+
+                case 'error':
+                    updateStatus('❌ Error in processing');
+                    addMessage(`❌ Error: ${data.data.error || data.data.message || 'Unknown error'}`, 'error');
+                    if (currentEventSource) {
+                        currentEventSource.close();
+                        currentEventSource = null;
+                    }
+                    break;
+
+                default:
+                    console.log('Unknown message type:', data.type, data);
+                    addMessage(`❓ Unknown message type: ${data.type}`, 'metadata');
+            }
+        }        function updateResponseDisplay() {
+            // Find or create the current response div
+            let responseDiv = document.querySelector('.current-response');
+            if (!responseDiv) {
+                responseDiv = document.createElement('div');
+                responseDiv.className = 'message-box agent-message current-response';
+                responseDiv.innerHTML = `
+                    <div class="timestamp">${new Date().toLocaleTimeString()}</div>
+                    <div class="response-content"></div>
+                `;
+                messagesContainer.appendChild(responseDiv);
+            }
+
+            const contentDiv = responseDiv.querySelector('.response-content');
+            // Show response with typing cursor
+            contentDiv.innerHTML = currentResponse + '<span class="typing-cursor">▋</span>';
+            
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function finishCurrentResponse() {
+            const responseDiv = document.querySelector('.current-response');
+            if (responseDiv) {
+                responseDiv.classList.remove('current-response');
+                const contentDiv = responseDiv.querySelector('.response-content');
+                if (contentDiv) {
+                    contentDiv.textContent = currentResponse; // Remove cursor
+                }
+                messageCount++; // Count the completed response
+                updateMessageCount();
+            }
+        }        // Enhanced regular message function
+        async function sendRegularMessage() {
+            const message = messageInput.value.trim();
+            if (!message) {
+                updateStatus('Please enter a message');
+                return;
+            }
+
+            // Add user message to UI
+            addMessage(message, 'user-message');
+            messageInput.value = '';
+            
+            updateStatus('📤 Sending regular request...');
+            const startTime = Date.now();
+
+            try {
+                const response = await fetch(`${config.baseUrl}/api/endpoint`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors',
+                    body: JSON.stringify({
+                        userId: config.userId,
+                        sessionId: config.sessionId,
+                        message: message,
+                        domain: config.domain,
+                        conversation_id: config.conversationId
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const totalTime = Date.now() - startTime;
+
+                if (data.success) {
+                    addMessage(data.response, 'agent-message');
+                    
+                    // Show enhanced metadata
+                    if (data.metadata) {
+                        const metaInfo = `⏱️ Regular response in ${totalTime}ms | 🎯 Agent: ${data.metadata.agentType || 'Unknown'} | 📊 Confidence: ${data.metadata.confidence ? (data.metadata.confidence * 100).toFixed(1) + '%' : 'N/A'}`;
+                        addMessage(metaInfo, 'metadata');
+                        
+                        if (data.metadata.reasoning) {
+                            addMessage(`🧠 Reasoning: ${data.metadata.reasoning}`, 'metadata');
+                        }
+                    }
+                    
+                    // Show values if present
+                    if (data.values && Object.keys(data.values).length > 0) {
+                        addMessage(`📋 Values: ${JSON.stringify(data.values)}`, 'metadata');
+                    }
+                    
+                    // Show Chatwoot integration status
+                    if (data.chatwoot) {
+                        const chatwootStatus = data.chatwoot.success ? '✅' : '❌';
+                        addMessage(`${chatwootStatus} Chatwoot: ${data.chatwoot.action} ${data.chatwoot.agentMessageAdded ? '(Message Added)' : ''}`, 'metadata');
+                    }
+                    
+                    // Capture conversation_id for subsequent messages
+                    if (data.conversation_id) {
+                        config.conversationId = data.conversation_id;
+                        addMessage(`💾 Conversation ID saved: ${data.conversation_id}`, 'metadata');
+                    }
+                    
+                    updateStatus('✅ Regular response received');
+                } else {
+                    addMessage(`❌ Error: ${data.error}`, 'error');
+                    updateStatus('❌ Error occurred');
+                }
+
+            } catch (error) {
+                console.error('Regular request error:', error);
+                addMessage(`❌ Error: ${error.message}`, 'error');
+                updateStatus('❌ Error occurred');
+            }
+        }        // Allow Enter key to send message
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendStreamingMessage();
+            }
+        });
+
+        // Welcome message explaining the new flow
+        function showWelcomeMessage() {
+            addMessage('🎉 Welcome to Peace Academy Streaming Test', 'metadata');
+            addMessage('📖 How it works:\n• 🚀 Stream: POST /stream/init creates conversation → GET /stream/:id streams AI response\n• 📝 Regular: Single POST /endpoint with complete response\n• 💬 Chatwoot: Messages sent during streaming phase\n• 🔄 Try both modes to see the difference!', 'metadata');
+        }
+
+        // Initialize with welcome message
+        showWelcomeMessage();
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (currentEventSource) {
+                currentEventSource.close();
+            }
+        });        // Initialize
+        updateStatus(`🚀 Ready to chat! User: ${config.userId.substring(10)}`);
+        addMessage('🕊️ Welcome to Peace Academy AI Agent! Now using true async streaming: POST /stream/init returns metadata immediately, GET /stream/:streamId handles AI processing. Try asking about the 7+2 Formula, word-switches, or test different agent types!', 'metadata');
+    </script>
+</body>
+</html>
